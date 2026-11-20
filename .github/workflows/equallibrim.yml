@@ -1,0 +1,45 @@
+name: Equallibrim Engine
+
+# Workflow for Equallibrim-Engine (Snjackson025/Equallibrim-Engine).
+# Builds equallibrim.cpp and runs the prototype smoke tests.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "equallibrim.cpp"
+      - "scripts/equallibrim-check.sh"
+      - ".github/workflows/equallibrim.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "equallibrim.cpp"
+      - "scripts/equallibrim-check.sh"
+      - ".github/workflows/equallibrim.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Compile
+        run: g++ -std=c++17 -Wall -Wextra -o /tmp/equallibrim equallibrim.cpp
+
+      - name: Run equilibrium smoke test
+        run: timeout 30 /tmp/equallibrim | tee /tmp/equallibrim_output.txt
+
+      - name: Verify equilibrium output
+        run: |
+          grep -q "EQUILIBRIUM ENGINE" /tmp/equallibrim_output.txt
+          grep -q "ENERGY STORAGE: 500.0000" /tmp/equallibrim_output.txt
+          grep -q "Physical Layer" /tmp/equallibrim_output.txt
+          grep -q "Stability: 0.5263" /tmp/equallibrim_output.txt
+          grep -q "State: TRANSITIONING" /tmp/equallibrim_output.txt
+          grep -q "State: UNSTABLE" /tmp/equallibrim_output.txt
+          grep -q "EQUILIBRIUM ENGINE COMPLETE" /tmp/equallibrim_output.txt
